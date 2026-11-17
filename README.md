@@ -77,25 +77,32 @@ crypto-arbitrage-bot init-config arb-config.json
 
 ```python
 from crypto_arbitrage_bot import (
-    FeeModel, VenueQuote, rank_cross,
-    MarketPair, PairGraph, build_report, render_table,
+    FeeModel,
+    VenueQuote,
+    rank_cross,
+    MarketPair,
+    PairGraph,
+    build_report,
+    render_table,
 )
 from rich.console import Console
 
 # 1) N-exchange cross scan for one pair, fee + slippage aware.
 board = [
-    VenueQuote(exchange="binance",  price=50_000.0, fees=FeeModel(taker_fee=0.001, slippage_bps=5)),
-    VenueQuote(exchange="kraken",   price=50_300.0, fees=FeeModel(taker_fee=0.001, slippage_bps=5)),
+    VenueQuote(exchange="binance", price=50_000.0, fees=FeeModel(taker_fee=0.001, slippage_bps=5)),
+    VenueQuote(exchange="kraken", price=50_300.0, fees=FeeModel(taker_fee=0.001, slippage_bps=5)),
     VenueQuote(exchange="coinbase", price=49_950.0, fees=FeeModel(taker_fee=0.001, slippage_bps=5)),
 ]
 cross = rank_cross("BTC/USDT", board, profitable_only=True)
 
 # 2) Triangular cycles discovered over a full pair graph.
-graph = PairGraph([
-    MarketPair(base="BTC", quote="USDT", price=50_000.0),
-    MarketPair(base="ETH", quote="BTC",  price=3_000.0 / 50_000.0),
-    MarketPair(base="ETH", quote="USDT", price=3_150.0),  # ETH dear -> a cycle edge
-])
+graph = PairGraph(
+    [
+        MarketPair(base="BTC", quote="USDT", price=50_000.0),
+        MarketPair(base="ETH", quote="BTC", price=3_000.0 / 50_000.0),
+        MarketPair(base="ETH", quote="USDT", price=3_150.0),  # ETH dear -> a cycle edge
+    ]
+)
 cycles = graph.find_cycles(max_len=3, profitable_only=True)
 
 # 3) One ranked, threshold-filtered report.
